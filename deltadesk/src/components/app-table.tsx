@@ -17,6 +17,7 @@ interface CustomTableProps<T extends RowData> {
   columns: ColumnDef<T, any>[];
   data: T[];
   onRowSelect?: (row: T) => void;
+  onAllRowsSelect?: (selected: boolean) => void; // New prop for select all
   initialPageIndex?: number;
   initialPageSize?: number;
   includeCheckboxColumn?: boolean; // New prop for including checkbox column
@@ -26,6 +27,7 @@ const CustomTable = <T extends RowData>({
   columns,
   data,
   onRowSelect,
+  onAllRowsSelect,
   initialPageIndex = 0,
   initialPageSize = 10,
   includeCheckboxColumn = false, // Default to false if not provided
@@ -56,46 +58,62 @@ const CustomTable = <T extends RowData>({
     }
   };
 
+  const handleAllRowsSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.checked;
+    if (onAllRowsSelect) {
+      onAllRowsSelect(selected);
+    }
+  };
+
   return (
     <>
+    <div className='bg-white dark:bg-slate-800 shadow-lg rounded-sm border border-slate-200 dark:border-slate-700 relative'>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {includeCheckboxColumn && <th style={{ width: '40px' }}></th>} {/* Checkbox column header */}
-              {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  style={{
-                    borderBottom: 'solid 3px red',
-                    background: 'aliceblue',
-                    color: 'black',
-                    fontWeight: 'bold',
-                  }}
-                  onClick={header.column.getToggleSortingHandler()}
-                >
-                  {flexRender(header.column.columnDef.header, header.getContext())}
-                  <span>
-                    {header.column.getIsSorted()
-                      ? header.column.getIsSorted() === 'desc'
-                        ? ' 🔽'
-                        : ' 🔼'
-                      : ''}
-                  </span>
-                </th>
-              ))}
-            </tr>
-          ))}
+          <tr>
+            {includeCheckboxColumn && ( // Checkbox column header
+              <th style={{ width: '40px' }}>
+                <input type="checkbox" onChange={handleAllRowsSelect} />
+              </th>
+            )}
+            {table.getHeaderGroups().map((headerGroup) => (
+              <React.Fragment key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    style={{
+                      // borderBottom: 'solid 3px red',
+                      // background: 'aliceblue',
+                      // color: 'black',
+                      // fontWeight: 'bold',
+                      padding: '10px',
+                    }}
+                    onClick={header.column.getToggleSortingHandler()}
+                  >
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    <span>
+                      {header.column.getIsSorted()
+                        ? header.column.getIsSorted() === 'desc'
+                          ? ' 🔽'
+                          : ' 🔼'
+                        : ''}
+                    </span>
+                  </th>
+                ))}
+              </React.Fragment>
+            ))}
+          </tr>
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row) => (
             <tr
               key={row.id}
               onClick={() => handleRowSelect(row.original)}
-              style={{ cursor: 'pointer' }}
+              style={{ padding: '10px', cursor: 'pointer',
+               }}
             >
               {includeCheckboxColumn && ( // Checkbox column cell
-                <td style={{ textAlign: 'center' }}>
+                <td style={{ textAlign: 'center', border: '1px solid lightgray' }}>
                   <input
                     type="checkbox"
                     onChange={(e) => e.stopPropagation()} // Prevent row selection on checkbox click
@@ -107,8 +125,8 @@ const CustomTable = <T extends RowData>({
                   key={cell.id}
                   style={{
                     padding: '10px',
-                    border: 'solid 1px gray',
-                    background: 'papayawhip',
+                    border: '1px solid lightgray',
+                    // background: 'papayawhip',
                   }}
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -161,6 +179,7 @@ const CustomTable = <T extends RowData>({
             </option>
           ))}
         </select>
+      </div>
       </div>
     </>
   );
